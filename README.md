@@ -1,5 +1,11 @@
 #golang 配置中心
 
+##架构图
+
+![avatar](./documents/img0.png)
+
+##用法
+
 ```
     1，ETCD启动
     etcd -name etc0 \
