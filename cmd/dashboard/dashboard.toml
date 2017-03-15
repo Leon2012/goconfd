@@ -1,0 +1,4 @@
+etcd_hosts = "localhost:2379"
+db_url="127.0.0.1:27017"
+db_name="goconfd"
+template_path="/Users/pengleon/gopath/goconfd/dashboard/template/"

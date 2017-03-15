@@ -1,0 +1,56 @@
+{{template "layout" .}}
+{{define "content"}}
+<div class="container-fluid">
+                <!-- Page Heading -->
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h1 class="page-header">
+                            Agents列表
+                        </h1>
+                        <ol class="breadcrumb">
+                            <li>
+                                <i class="fa fa-dashboard"></i>  <a href="/">Dashboard</a>
+                            </li>
+                            <li class="active">
+                                <i class="fa fa-table"></i> Agents列表
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- /.row -->
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h2>Agents列表</h2>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Key Prefix</th>
+                                        <th>IP</th>
+                                        <th>最后心跳时间</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{range .}}
+                                    <tr>
+                                        <td><a href="/heartbeat/{{.HostName}}/{{.KeyPrefix}}">{{.HostName}}</td>
+                                        <td>{{.KeyPrefix}}</td>
+                                        <td>{{.IpAddress}}</td>
+                                        <td>{{.HeartbeatTime}}</td>
+                                        <td>{{.Status}}</td>
+                                    </tr>
+                                    {{end}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    </div>
+                <!-- /.row -->
+
+            </div>
+            <!-- /.container-fluid -->
+{{end}}

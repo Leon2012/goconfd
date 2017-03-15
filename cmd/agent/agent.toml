@@ -1,0 +1,6 @@
+hosts = "192.168.174.114:2379"
+save_type=2
+save_path = "/tmp/goconfd"
+file_ext = "php"
+key_prefix= "develop.activity"
+heartbeat_interval=30
