@@ -34,6 +34,10 @@
 	if err != nil {
 		t.Error(err)
 	}
-	k, err := gconfd.Get("key.k1")
+	k, err := gconfd.Get("develop.activity.k7")
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(k.Value)
 
 ```
