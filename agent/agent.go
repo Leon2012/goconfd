@@ -112,7 +112,7 @@ func (a *Agent) Main() {
 	if a.opts.SaveType == 1 {
 		l, err = local.NewFileSaver(a.opts.SavePath, a.opts.FileExt)
 	} else if a.opts.SaveType == 2 {
-		l, err = local.NewShmSaver()
+		l, err = local.NewShmSaver(a.opts.SavePath)
 	}
 	if err != nil {
 		a.logf("FATAL: create local save failed - %s", err.Error())

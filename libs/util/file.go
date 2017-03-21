@@ -2,7 +2,6 @@ package util
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -26,7 +25,7 @@ func IsWritable(folder string) (err error) {
 
 func IsExist(name string) bool {
 	_, err := os.Stat(name)
-	fmt.Println(err)
+	//fmt.Println(err)
 	if os.IsNotExist(err) {
 		return false
 	}

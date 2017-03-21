@@ -66,10 +66,11 @@ func (c *RPCClient) Call(method string, args interface{}, reply interface{}) err
 func (c *RPCClient) Close() {
 	if c.conn != nil {
 		c.conn.Close()
-		c.client = nil
+		c.conn = nil
 	}
 	if c.client != nil {
 		c.client.Close()
-		c.conn = nil
+
+		c.client = nil
 	}
 }

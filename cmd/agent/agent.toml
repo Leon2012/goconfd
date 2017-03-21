@@ -1,6 +1,6 @@
-hosts = "192.168.174.114:2379"
-save_type=2
-save_path = "/tmp/goconfd"
+hosts = "192.168.174.114:2379" #etcd hosts
+save_type=2                    #1=file, 2=share memory 
+save_path = "/tmp/goconfd"     #file or share memory save path
 file_ext = "php"
-key_prefix= "develop.activity"
-heartbeat_interval=30
+key_prefix= "develop.activity" #monitor key prefix
+heartbeat_interval=30          

@@ -18,12 +18,14 @@ type ShmSaver struct {
 	sync.RWMutex
 	EncodeFunc kv.EncodeFunc
 	DecodeFunc kv.DecodeFunc
+	shmPath    string
 }
 
-func NewShmSaver() (*ShmSaver, error) {
+func NewShmSaver(shmPath string) (*ShmSaver, error) {
 	s := &ShmSaver{}
 	s.EncodeFunc = kv.JsonEncode
 	s.DecodeFunc = kv.JsonDecode
+	s.shmPath = shmPath
 	return s, nil
 }
 
@@ -34,7 +36,7 @@ func (s *ShmSaver) Save(k *kv.Kv) error {
 	}
 	key := k.Key
 	hexKey := util.HexKey(key)
-	fileName := filepath.Join(DEFAULT_SHM_PATH, hexKey)
+	fileName := filepath.Join(s.shmPath, hexKey)
 	shmid, err := shm.Open(fileName)
 	if err != nil {
 		return err
@@ -48,7 +50,7 @@ func (s *ShmSaver) Save(k *kv.Kv) error {
 
 func (s *ShmSaver) Get(k string) (*kv.Kv, error) {
 	hexKey := util.HexKey(k)
-	fileName := filepath.Join(DEFAULT_SHM_PATH, hexKey)
+	fileName := filepath.Join(s.shmPath, hexKey)
 	data := shm.Read(fileName)
 	if data == "" {
 		return nil, errors.New("read faile")
