@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-var SHM_FILE = "/dev/shm/confd5"
+var SHM_FILE = "/dev/shm/confd6"
 
 func TestWrite(t *testing.T) {
 	id, err := Open(SHM_FILE)

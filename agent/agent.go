@@ -43,6 +43,7 @@ type Agent struct {
 	localIP       string
 	rpcClient     *RpcClient
 	exitChan      chan bool
+	mq            *MsgQueue
 }
 
 func NewAgent(opts *Options) *Agent {
@@ -135,6 +136,18 @@ func (a *Agent) Main() {
 		httpServer.serve(a.httpListener)
 	})
 
+	mq, err := NewMsgQueue(ctx, "/tmp/queue1", 0x01)
+	if err != nil {
+		a.logf("FATAL: init Msg queue failed - %s", err)
+		os.Exit(1)
+	}
+	a.Lock()
+	a.mq = mq
+	a.Unlock()
+	a.waitGroup.Wrap(func() {
+		mq.Receive()
+	})
+
 	go SaveKV(ctx)
 
 	//go LoadValuesByPrefix(ctx)
@@ -165,6 +178,7 @@ func (a *Agent) Main() {
 }
 
 func (a *Agent) Exit() {
+	close(a.exitChan)
 	if a.httpListener != nil {
 		a.httpListener.Close()
 	}
@@ -175,6 +189,9 @@ func (a *Agent) Exit() {
 	if err != nil {
 		a.logf("agent call offline faile : %s", err.Error())
 	}
-	close(a.exitChan)
+
+	if a.mq != nil {
+		a.mq.Close()
+	}
 	a.waitGroup.Wait()
 }
