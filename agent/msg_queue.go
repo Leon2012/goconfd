@@ -17,8 +17,9 @@ type MsgQueue struct {
 func NewMsgQueue(ctx *Context, path string, projId int) (*MsgQueue, error) {
 	mq, err := sysv_mq.NewMessageQueue(
 		&sysv_mq.QueueConfig{
-			Path:    path,
-			ProjId:  projId,
+			Path:   path,
+			ProjId: projId,
+			//Key:     0xDEADBEEF,
 			MaxSize: defaultMsgQueueMaxSize,
 			Mode:    sysv_mq.IPC_CREAT | 0600,
 		},
@@ -44,14 +45,10 @@ func (q *MsgQueue) Receive() {
 				q.ctx.Agent.logf("ERROR: receive mq message (%s) error (%s)", message, err)
 				continue
 			}
-			data, err := q.handle([]byte(message), mtype)
+			_, err = q.handle([]byte(message), mtype)
 			if err != nil {
 				q.ctx.Agent.logf("ERROR: handle mq message (%s) error (%s)", message, err)
 				continue
-			}
-			err = q.Send(data)
-			if err != nil {
-				q.ctx.Agent.logf("ERROR: send data error (%s)", err)
 			}
 		}
 	}

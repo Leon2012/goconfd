@@ -72,6 +72,8 @@ import (
 	_ "log"
 	"os"
 	_ "time"
+
+	"github.com/Leon2012/goconfd/libs/util"
 )
 
 type errorString struct {
@@ -83,6 +85,9 @@ func (e *errorString) Error() string {
 }
 
 func Open(filename string) (int, error) {
+	if util.IsExist(filename) {
+		Del(filename)
+	}
 	//filename := filepath.Join("/tmp", file)
 	fp, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
@@ -93,7 +98,7 @@ func Open(filename string) (int, error) {
 	defer C.free(unsafe.Pointer(f))
 	r := int(C.my_shm_open(f, C.int(1)))
 	if r == -1 {
-		return 0, &errorString{"Open error"}
+		return 0, &errorString{"Open shm error"}
 	}
 	return r, nil
 }
