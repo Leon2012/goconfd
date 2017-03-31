@@ -17,8 +17,6 @@ import (
 	_ "github.com/coreos/etcd/clientv3"
 )
 
-const MONITOR_RPC_HOST_KEY = "system.monitor.rpc.host"
-
 type KvPair struct {
 	KeyPrefix string
 	Kv        *kv.Kv
@@ -37,7 +35,6 @@ type Agent struct {
 	idc           registry.Backend
 	local         registry.Frontend
 	keyCache      map[string]string
-	monitorKv     *kv.Kv
 	lastHeartbeat *Heartbeat
 	watchKVChan   chan *kv.Kv
 	hostName      string
@@ -45,6 +42,7 @@ type Agent struct {
 	rpcClient     *RpcClient
 	exitChan      chan bool
 	mq            *MsgQueue
+	monitor       *Monitor
 }
 
 func NewAgent(opts *Options) *Agent {
@@ -150,19 +148,16 @@ func (a *Agent) Main() {
 	})
 
 	go SaveKV(ctx)
-
-	//go LoadValuesByPrefix(ctx)
 	if a.opts.AutoLoad {
 		UpdateLocalVales(ctx)
 	}
-	//获取monitor host
-	mrhKv, err := LoadValueByKey(ctx, MONITOR_RPC_HOST_KEY)
-	if err == nil {
-		a.monitorKv = mrhKv
-	} else {
-		a.monitorKv = nil
-	}
-	go WatchValuesByKey(ctx, MONITOR_RPC_HOST_KEY)
+	monitor := NewMonitor(ctx)
+	a.Lock()
+	a.monitor = monitor
+	a.Unlock()
+	a.waitGroup.Wrap(func() {
+		a.monitor.WatchNodes()
+	})
 
 	rpcClient := NewRpcClient(ctx)
 	a.Lock()

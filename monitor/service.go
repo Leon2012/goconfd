@@ -33,7 +33,6 @@ func NewService(ctx *Context) (*Service, error) {
 	s := &Service{
 		ctx: ctx,
 		info: &node.Node{
-			Name:           ctx.Monitor.hostName,
 			ServiceAddress: ctx.Monitor.opts.RpcAddress,
 			CPU:            runtime.NumCPU(),
 			IP:             net2.LocalIPString(),
@@ -50,6 +49,7 @@ func NewService(ctx *Context) (*Service, error) {
 		return nil, err
 	}
 	s.backend = cli
+	s.info.Name = s.key()
 	return s, nil
 }
 
@@ -100,6 +100,7 @@ func (a *Service) Deregister() error {
 		a.exit = true
 		key := a.key()
 		err := a.backend.Del(key)
+		a.backend.Close()
 		close(a.exitChan)
 		return err
 	}

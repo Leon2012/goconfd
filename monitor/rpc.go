@@ -74,6 +74,7 @@ func (r *MonitorRpc) Heartbeat(args *protocol.HeartbeatArg, reply *protocol.Hear
 	heartbeat.LatestTime = args.Time
 	err := r.ctx.Monitor.db.Heartbeat(heartbeat)
 	if err != nil {
+		r.ctx.Monitor.logf("ERROR: call heartbeat faile - %s", err)
 		return err
 	}
 	return nil

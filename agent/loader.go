@@ -60,11 +60,7 @@ func WatchValuesByPrefixs(ctx *Context, prefixs []string) {
 //监控单key数据
 func WatchValuesByKey(ctx *Context, key string) {
 	ctx.Agent.idc.WatchWithKey(key, func(k *kv.Kv, prefix string) bool {
-		if key == MONITOR_RPC_HOST_KEY {
-			ctx.Agent.rpcClient.ReloadAddrs()
-		} else {
-			ctx.Agent.watchKVChan <- k
-		}
+		ctx.Agent.watchKVChan <- k
 		return true
 	})
 }

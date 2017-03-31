@@ -1,13 +1,11 @@
 package agent
 
 import (
-	"strings"
 	"time"
 
 	"errors"
 
 	"github.com/Leon2012/goconfd/libs/client"
-	"github.com/Leon2012/goconfd/libs/net2"
 	"github.com/Leon2012/goconfd/libs/protocol"
 )
 
@@ -81,25 +79,7 @@ func (r *RpcClient) Heartbeat(interval int) {
 }
 
 func (r *RpcClient) ReloadAddrs() bool {
-	if r.ctx.Agent.monitorKv == nil {
-		return false
-	}
-	addrStr := r.ctx.Agent.monitorKv.Value
-	if addrStr == "" {
-		return false
-	}
-	addrs := []string{}
-	if strings.Index(addrStr, ";") != -1 {
-		addrArr := strings.Split(addrStr, ";")
-		for _, addr := range addrArr {
-			addr = strings.TrimSpace(addr)
-			if net2.CheckIp(addr) {
-				addrs = append(addrs, addr)
-			}
-		}
-	} else {
-		addrs = append(addrs, addrStr)
-	}
+	addrs := r.ctx.Agent.monitor.GetNodesAddr()
 	r.client.SetAddrs(addrs)
 	r.ctx.Agent.logf("set monitor rpc address : %s", addrs)
 	return true
@@ -117,8 +97,7 @@ func (r *RpcClient) doHeartbeat() {
 		}
 		args.Time = r.ctx.Agent.lastHeartbeat.UpdateTime
 	} else {
-		args.Key = ""
-		args.Value = ""
+		args.Time = time.Now()
 	}
 	var reply protocol.HeartbeatReply
 	err := r.doCall("MonitorRpc.Heartbeat", args, reply)
@@ -130,9 +109,6 @@ func (r *RpcClient) doHeartbeat() {
 
 func (r *RpcClient) doCall(method string, args, reply interface{}) error {
 	var err error
-	if r.errCnt > r.maxErrCnt {
-		return errors.New("error cnt more than the max error cnt, require ignore!")
-	}
 	err = r.client.Open()
 	if err != nil {
 		r.errCnt++
