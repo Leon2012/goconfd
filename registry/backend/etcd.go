@@ -1,10 +1,12 @@
-package idc
+package backend
 
 import (
 	"fmt"
 	"time"
 
 	"sync"
+
+	"errors"
 
 	"github.com/Leon2012/goconfd/libs/kv"
 	"github.com/coreos/etcd/clientv3"
@@ -22,6 +24,7 @@ type EtcdAdpater struct {
 	requestTimeout time.Duration
 	dialTimeout    time.Duration
 	wg             sync.WaitGroup
+	ttlMap         map[string]*clientv3.LeaseGrantResponse
 }
 
 func NewEtcdAdpater(hosts []string, request, dial int) (*EtcdAdpater, error) {
@@ -29,6 +32,7 @@ func NewEtcdAdpater(hosts []string, request, dial int) (*EtcdAdpater, error) {
 		hosts:          hosts,
 		requestTimeout: time.Duration(request) * time.Second,
 		dialTimeout:    time.Duration(dial) * time.Second,
+		ttlMap:         make(map[string]*clientv3.LeaseGrantResponse),
 	}
 	err := etcd.connect()
 	if err != nil {
@@ -49,6 +53,17 @@ func (e *EtcdAdpater) connect() error {
 	return nil
 }
 
+func (e *EtcdAdpater) Del(k string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), e.requestTimeout)
+	_, err := e.client.Delete(ctx, k)
+	cancel()
+	if err != nil {
+		return err
+	}
+	delete(e.ttlMap, k)
+	return nil
+}
+
 func (e *EtcdAdpater) Put(k, v string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), e.requestTimeout)
 	_, err := e.client.Put(ctx, k, v)
@@ -58,6 +73,22 @@ func (e *EtcdAdpater) Put(k, v string) error {
 	}
 	return nil
 }
+
+func (e *EtcdAdpater) PutWithTTL(k, v string, ttl int64) error {
+	leaseResp, err := e.client.Grant(context.TODO(), ttl)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), e.requestTimeout)
+	_, err = e.client.Put(ctx, k, v, clientv3.WithLease(leaseResp.ID))
+	cancel()
+	if err != nil {
+		return err
+	}
+	e.ttlMap[k] = leaseResp
+	return nil
+}
+
 func (e *EtcdAdpater) Get(k string) ([]*kv.Kv, error) {
 	fmt.Println("get key:" + k)
 	kvs := []*kv.Kv{}
@@ -74,6 +105,19 @@ func (e *EtcdAdpater) Get(k string) ([]*kv.Kv, error) {
 	}
 	return kvs, nil
 }
+
+func (e *EtcdAdpater) SetTTL(k string) error {
+	leaseResp, ok := e.ttlMap[k]
+	if !ok {
+		return errors.New("key not found TTL")
+	}
+	_, err := e.client.KeepAliveOnce(context.TODO(), leaseResp.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (e *EtcdAdpater) BatchGetByPrefix(prefix string) ([]*kv.Kv, error) {
 	kvs := []*kv.Kv{}
 	ctx, cancel := context.WithTimeout(context.Background(), e.requestTimeout)

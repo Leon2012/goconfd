@@ -16,15 +16,19 @@ import (
 )
 
 var (
-	flagSet     = flag.NewFlagSet("monitor", flag.ExitOnError)
-	config      = flagSet.String("config", "", "config file")
-	showVersion = flagSet.Bool("version", false, "show version")
-	rpcAddress  = flagSet.String("rpc_address", "0.0.0.0:3002", "rpc address")
-	dbUrl       = flagSet.String("db_url", "127.0.0.1:27017", "mongodb url")
-	dbTimeout   = flagSet.Int("db_timeout", 5, "mongodb timeout")
-	dbName      = flagSet.String("db_name", "goconfd", "mongodb name")
-	dbUser      = flagSet.String("db_user", "", "mongodb user ")
-	dbPass      = flagSet.String("db_pass", "", "mongodb pass")
+	flagSet           = flag.NewFlagSet("monitor", flag.ExitOnError)
+	config            = flagSet.String("config", "", "config file")
+	showVersion       = flagSet.Bool("version", false, "show version")
+	rpcAddress        = flagSet.String("rpc_address", "0.0.0.0:3002", "rpc address")
+	dbUrl             = flagSet.String("db_url", "127.0.0.1:27017", "mongodb url")
+	dbTimeout         = flagSet.Int("db_timeout", 5, "mongodb timeout")
+	dbName            = flagSet.String("db_name", "goconfd", "mongodb name")
+	dbUser            = flagSet.String("db_user", "", "mongodb user ")
+	dbPass            = flagSet.String("db_pass", "", "mongodb pass")
+	dialTimeout       = flagSet.Int("dial_timeout", 5, "dial timeout")
+	requestTimeout    = flagSet.Int("request_timeout", 5, "request timeout")
+	hosts             = flagSet.String("hosts", "localhost:2379", "etcd hosts")
+	heartbeatInterval = flagSet.Int("heartbeat_interval", 5, "heartbeat interval")
 )
 
 type program struct {

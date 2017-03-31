@@ -7,12 +7,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Leon2012/goconfd/agent/idc"
-	"github.com/Leon2012/goconfd/agent/local"
 	"github.com/Leon2012/goconfd/libs/kv"
 	"github.com/Leon2012/goconfd/libs/net2"
 	"github.com/Leon2012/goconfd/libs/util"
 	"github.com/Leon2012/goconfd/libs/version"
+	"github.com/Leon2012/goconfd/registry"
+	"github.com/Leon2012/goconfd/registry/backend"
+	"github.com/Leon2012/goconfd/registry/frontend"
 	_ "github.com/coreos/etcd/clientv3"
 )
 
@@ -33,8 +34,8 @@ type Agent struct {
 	opts          *Options
 	httpListener  net.Listener
 	waitGroup     util.WaitGroupWrapper
-	idc           IdcInterface
-	local         LocalInterface
+	idc           registry.Backend
+	local         registry.Frontend
 	keyCache      map[string]string
 	monitorKv     *kv.Kv
 	lastHeartbeat *Heartbeat
@@ -100,7 +101,7 @@ func (a *Agent) Main() {
 		os.Exit(1)
 	}
 	hosts := a.opts.ParseHosts()
-	cli, err := idc.NewEtcdAdpater(hosts, a.opts.DialTimeout, a.opts.RequestTimeout)
+	cli, err := backend.NewEtcdAdpater(hosts, a.opts.DialTimeout, a.opts.RequestTimeout)
 	if err != nil {
 		a.logf("FATAL: create etcd client failed - %s, hosts : %s", err.Error(), hosts)
 		os.Exit(1)
@@ -109,11 +110,11 @@ func (a *Agent) Main() {
 	a.idc = cli
 	a.Unlock()
 
-	var l LocalInterface
+	var l registry.Frontend
 	if a.opts.SaveType == 1 {
-		l, err = local.NewFileSaver(a.opts.SavePath, a.opts.FileExt)
+		l, err = frontend.NewFileSaver(a.opts.SavePath, a.opts.FileExt)
 	} else if a.opts.SaveType == 2 {
-		l, err = local.NewShmSaver(a.opts.SavePath)
+		l, err = frontend.NewShmSaver(a.opts.SavePath)
 	}
 	if err != nil {
 		a.logf("FATAL: create local save failed - %s", err.Error())

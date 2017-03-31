@@ -5,20 +5,20 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/Leon2012/goconfd/agent"
-	"github.com/Leon2012/goconfd/agent/local"
 	"github.com/Leon2012/goconfd/libs/kv"
+	"github.com/Leon2012/goconfd/registry"
+	"github.com/Leon2012/goconfd/registry/frontend"
 )
 
 type Goconfd struct {
-	local    agent.LocalInterface
+	local    registry.Frontend
 	agentUrl string
 }
 
-func NewGoconfd() (*Goconfd, error) {
+func NewGoconfd(shmPath string) (*Goconfd, error) {
 	g := &Goconfd{}
 	g.agentUrl = "http://127.0.0.1:3001/"
-	local, err := local.NewShmSaver()
+	local, err := frontend.NewShmSaver(shmPath)
 	if err != nil {
 		return nil, err
 	}

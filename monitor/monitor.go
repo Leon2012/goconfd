@@ -20,6 +20,8 @@ type Monitor struct {
 	waitGroup   util.WaitGroupWrapper
 	dbConfig    mongo.MongoConfig
 	db          db.Adapter
+	hostName    string
+	service     *Service
 }
 
 func NewMonitor(o *Options) *Monitor {
@@ -39,6 +41,16 @@ func (a *Monitor) logf(f string, args ...interface{}) {
 
 func (a *Monitor) Main() {
 	ctx := &Context{a}
+
+	hostName, err := util.GetHostName()
+	if err != nil {
+		a.logf("FATAL: get host name faile")
+		os.Exit(1)
+	}
+	a.Lock()
+	a.hostName = hostName
+	a.Unlock()
+
 	a.Lock()
 	a.dbConfig = mongo.MongoConfig{
 		Url:      a.opts.DBUrl,
@@ -49,11 +61,29 @@ func (a *Monitor) Main() {
 	}
 	a.db = mongo.NewMongoAdapter()
 	a.Unlock()
-	err := a.db.Open(a.dbConfig)
+	err = a.db.Open(a.dbConfig)
 	if err != nil {
 		a.logf("FATAL: open db failed - %s", err)
 		os.Exit(1)
 	}
+
+	service, err := NewService(ctx)
+	if err != nil {
+		a.logf("FATAL: create service failed - %s", err.Error())
+		os.Exit(1)
+	}
+	err = service.Register()
+	if err != nil {
+		a.logf("FATAL: register service failed - %s", err.Error())
+		os.Exit(1)
+	}
+	a.Lock()
+	a.service = service
+	a.Unlock()
+	a.waitGroup.Wrap(func() {
+		a.service.Heartbeat()
+	})
+
 	tcpListener, err := net.Listen("tcp", a.opts.RpcAddress)
 	if err != nil {
 		a.logf("FATAL: listen (%s) failed - %s", a.opts.RpcAddress, err)
@@ -70,6 +100,7 @@ func (a *Monitor) Main() {
 }
 
 func (a *Monitor) Exit() {
+	a.service.Deregister()
 	if a.db != nil {
 		a.db.Close()
 	}

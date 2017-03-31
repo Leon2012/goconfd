@@ -1,4 +1,4 @@
-package local
+package frontend
 
 import (
 	"github.com/Leon2012/goconfd/libs/kv"

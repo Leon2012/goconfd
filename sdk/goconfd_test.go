@@ -5,7 +5,7 @@ import (
 )
 
 func TestGet(t *testing.T) {
-	gconfd, err := NewGoconfd()
+	gconfd, err := NewGoconfd("/dev/shm")
 	if err != nil {
 		t.Error(err)
 	}
@@ -17,7 +17,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestGetFromAgent(t *testing.T) {
-	gconfd, err := NewGoconfd()
+	gconfd, err := NewGoconfd("/dev/shm")
 	if err != nil {
 		t.Error(err)
 	}

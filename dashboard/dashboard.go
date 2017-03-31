@@ -7,10 +7,10 @@ import (
 
 	"sync"
 
-	"github.com/Leon2012/goconfd/agent"
-	"github.com/Leon2012/goconfd/agent/idc"
 	"github.com/Leon2012/goconfd/libs/util"
 	"github.com/Leon2012/goconfd/libs/version"
+	"github.com/Leon2012/goconfd/registry"
+	"github.com/Leon2012/goconfd/registry/backend"
 	"github.com/Leon2012/goconfd/store/db"
 	"github.com/Leon2012/goconfd/store/db/mongo"
 )
@@ -22,7 +22,7 @@ type Dashboard struct {
 	waitGroup    util.WaitGroupWrapper
 	dbConfig     mongo.MongoConfig
 	db           db.Adapter
-	idc          agent.IdcInterface
+	idc          registry.Backend
 }
 
 func NewDashboard(o *Options) *Dashboard {
@@ -65,7 +65,7 @@ func (a *Dashboard) Main() {
 		a.logf("FATAL: etcd host empty")
 		os.Exit(1)
 	}
-	cli, err := idc.NewEtcdAdpater(a.opts.ParseHosts(), a.opts.DialTimeout, a.opts.RequestTimeout)
+	cli, err := backend.NewEtcdAdpater(a.opts.ParseHosts(), a.opts.DialTimeout, a.opts.RequestTimeout)
 	if err != nil {
 		a.logf("FATAL: create etcd client failed - %s", err.Error())
 		os.Exit(1)

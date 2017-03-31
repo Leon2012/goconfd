@@ -1,2 +1,4 @@
 db_url="127.0.0.1:27017"
 db_name="goconfd"
+hosts = "127.0.0.1:2379" #etcd hosts
+heartbeat_interval=30 
