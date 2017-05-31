@@ -10,18 +10,19 @@ import (
 )
 
 type RpcClient struct {
-	client            *client.RPCClient
-	ctx               *Context
-	maxErrCnt, errCnt int
+	client                        *client.RPCClient
+	ctx                           *Context
+	maxErrCnt, errCnt, maxRetries int
 }
 
 func NewRpcClient(c *Context) *RpcClient {
 	key := c.Agent.hostName + "_" + c.Agent.opts.KeyPrefix
 	selector := client.NewRingSelector(key)
 	cl := &RpcClient{
-		ctx:       c,
-		maxErrCnt: 10,
-		errCnt:    0,
+		ctx:        c,
+		maxErrCnt:  10,
+		errCnt:     0,
+		maxRetries: 5,
 	}
 	cl.client = client.NewRPCClient(selector)
 	return cl
@@ -108,15 +109,11 @@ func (r *RpcClient) doHeartbeat() {
 }
 
 func (r *RpcClient) doCall(method string, args, reply interface{}) error {
-	var err error
-	err = r.client.Open()
-	if err != nil {
-		r.errCnt++
-		r.ctx.Agent.logf("rpc call %s error : %s", method, err.Error())
-		return err
+	if r.errCnt > r.maxErrCnt {
+		return errors.New("error cnt more than the max error cnt, require ignore!")
 	}
-	defer r.client.Close()
-	err = r.client.Call(method, args, &reply)
+	var err error
+	err = r.client.Call(method, args, reply)
 	if err != nil {
 		r.errCnt++
 		return err
